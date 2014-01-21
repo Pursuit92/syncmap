@@ -28,6 +28,14 @@ type Map struct {
 	mut * sync.RWMutex
 }
 
+func (sm Map) Lock() {
+	sm.mut.Lock()
+}
+
+func (sm Map) Unlock() {
+	sm.mut.Unlock()
+}
+
 func (sm Map) Get(key interface{}) (interface{},bool) {
 	sm.mut.RLock()
 
@@ -53,14 +61,21 @@ func (sm Map) Delete(key interface{}) {
 	sm.mut.Unlock()
 }
 
+// This is the only function that doesn't auto-lock the map.
+// DO NOT USE IT WITHOUT Lock()'ing IT FIRST!
 func (sm Map) Map() map[interface{}]interface{} {
 	m := make(map[interface{}]interface{})
-	sm.mut.RLock()
 	for i,v := range sm.internal {
 		m[i] = v
 	}
-	sm.mut.RUnlock()
 	return m
+}
+
+func (sm Map) LockMap() map[interface{}]interface{} {
+	sm.Lock()
+	ret := sm.Map()
+	sm.Unlock()
+	return ret
 }
 
 
